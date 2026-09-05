@@ -240,3 +240,44 @@ Thống kê thời lượng sự kiện: CDnet2014 (2516 sự kiện, median 2, 
 - E4 "EDF-fit 0 vi phạm" là **fit trên chính trace đánh giá**, không phải bảo đảm.
 - E5 churn dùng Poisson/Bernoulli — mô hình quy ước, quét 5 mức để kết luận không phụ thuộc một điểm tham số.
 - Năng lượng: **tái dùng** hai hằng số đo trên Jetson Orin Nano của bài companion; **không** có phép đo mới trong bài này, và không có triển khai end-to-end.
+
+
+---
+
+# ĐỢT 3 (06-09-2026) — BỔ SUNG
+
+## Scheduler mới: **divisor wheel** (cột `wheel_ok` trong E1, scheduler `wheel` trong E2)
+Làm tròn mỗi cửa sổ xuống **ước lớn nhất của một wheel length M** (thay vì xuống `a·2^j` như
+harmonic 1 cơ số), rồi gán lớp thặng dư **có backtracking**. Quét 387 giá trị M ứng viên (mọi
+`a·2^j` — bao trùm cách cũ — cộng mọi số 13-smooth ≤ 2520), thử theo thứ tự mật độ sau làm tròn
+tăng dần, lấy M đầu tiên đóng gói được. **Một phép đóng gói thành công CHÍNH LÀ chứng chỉ** (gap =
+d_i ≤ K_i đúng bằng định nghĩa) — không viện đến định lý ngoài nào.
+
+| bin ρ | exact | harmonic 1 cơ số | **divisor wheel** | lazy EDF |
+|---|---|---|---|---|
+| (0,700; 0,750] | 1.00 | 1.00 | **1.00** | 0.79 |
+| (0,750; 0,833] | 1.00 | 0.91 | **0.97** | 0.56 |
+| (0,833; 0,900] | 1.00 | 0.52 | **0.74** | 0.21 |
+| (0,900; 0,950] | 0.71 | 0.23 | **0.36** | 0.05 |
+
+Trên E2: **0/302.224** sự kiện chứng nhận bị lỡ, và dựng được **144/192** run có cửa sổ shaped
+trên **lưới nguyên** (harmonic chỉ 129/192) — lưới nguyên cho hàm mục tiêu tốt hơn lưới harmonic
+nhưng khó dựng hơn, divisor wheel lấp một phần khoảng đó.
+
+⚠ **KHÔNG phải Chan–Chin 7/10.** Bài gốc trả phí và không nguồn thứ cấp truy cập được nào phát
+biểu thuật toán đủ chính xác để cài lại trung thực; một giả thuyết về điều kiện của họ đã bị phản
+ví dụ `{2,3,6}` bác bỏ khi kiểm thử, nên dừng thay vì đoán. Giới hạn của divisor wheel: nó chỉ đi
+trong lớp **lịch tuần hoàn hoàn hảo**; instance khả thi nhưng không có lịch tuần hoàn hoàn hảo thì
+không phương pháp bánh xe nào với tới.
+
+## Sửa tái lập: `exact_schedulable` bỏ ngân sách thời gian thực
+Trước đây hàm này dừng theo **đồng hồ** (3 s), nên verdict phụ thuộc tải máy — chạy lại cùng seed
+trên máy bận đã lật 5 instance giữa `False` và `None`. Nay ngân sách là **số trạng thái**
+(400.000), kết quả tái lập trên mọi máy. Hệ quả: 5 instance trước đây "không quyết định được" nay
+quyết định được; **6/594 instance vẫn vượt ngân sách và bị loại khỏi mẫu số** (không giả định theo
+hướng nào) — đã ghi vào Limitations của bản thảo.
+
+## Hình
+`fig_E3_switch` và `fig_E6_blackout` đã được **gộp** thành `fig_E36_extensions` (2 panel: (a) switch
+cost, (b) blackout) theo quyết định CP-B1 mức (b). `fig_E1_schedulability` nay có 4 cột (thêm
+divisor wheel). Tổng còn **7 file hình** + 1 sơ đồ vẽ bằng LaTeX = 8 hình trong bài.
