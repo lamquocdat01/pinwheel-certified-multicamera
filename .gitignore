@@ -25,3 +25,6 @@ __pycache__/
 *.bak
 *.bak_*
 *~
+
+# publication metadata: names this repository's own commit, so tracking it would be circular
+results/repo_meta.json

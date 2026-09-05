@@ -12,6 +12,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb,amsthm}
+\usepackage{bm}
 \usepackage{graphicx}
 % Resolve figures whether main.tex sits next to figures/ (submission package, local build) or one
 % level below it (code repository layout, where figures/ is at the repository root).
@@ -22,6 +23,7 @@
 \usepackage{algpseudocode}
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
+\usepackage[mathlines]{lineno}   % line numbers for reviewers (JNCA is single-anonymized)
 
 \journal{Journal of Network and Computer Applications}
 
@@ -55,6 +57,7 @@
 \newcommand{\pos}[1]{(#1)_{+}}
 
 \begin{document}
+\linenumbers
 
 \begin{frontmatter}
 
@@ -241,16 +244,17 @@ positions the present paper against the nearest systems work.
 \caption{Position of this paper. ``Capacity law'' means a closed-form test that decides how many
 streams fit without constructing a schedule.}
 \label{tab:related}
+\footnotesize\setlength{\tabcolsep}{4pt}
 \begin{tabular}{llccc}
 \toprule
-Work & Scheduling unit & Guarantee & Capacity law & $O(1)$ admission \\
+Work & Unit scheduled & Guarantee & Capacity law & $O(1)$ test \\
 \midrule
-SplitStream \cite{liang2024splitstream} & camera $\to$ node & average accuracy & no & no \\
+SplitStream \cite{liang2024splitstream} & camera $\to$ node & avg.\ accuracy & no & no \\
 Multi-tenant DNN \cite{liu2026multitenant} & inference request & predictability & no & no \\
-Attention sched.\ \cite{liu2023attention} & region in one frame & mean uncertainty & no & no \\
+Attention sched.\ \cite{liu2023attention} & region in a frame & mean uncertainty & no & no \\
 RT GPU sched.\ \cite{yang2022rtgpu} & periodic job & job deadline & utilisation & no \\
-Admission for BLE mesh \cite{leonardi2025racble} & connection & non-overlap & no & yes \\
-\textbf{This paper} & \textbf{camera in a fleet} & \textbf{refresh window} & \textbf{$\dens\le5/6$} & \textbf{yes} \\
+BLE mesh admission \cite{leonardi2025racble} & connection & non-overlap & no & yes \\
+\textbf{This paper} & \textbf{camera in a fleet} & \textbf{refresh window} & $\bm{\dens\le5/6}$ & \textbf{yes} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -354,9 +358,13 @@ Section~\ref{sec:eval-frontier} it matches the measured miss rate to within \num
 \section{Certified capacity and admission control}\label{sec:capacity}
 
 \begin{definition}[profile, density]\label{def:profile}
-A \emph{certificate profile} is a vector $A=(K_1,\dots,K_\Nc)\in\mathbb{N}_{\ge1}^{\Nc}$. It is
-\emph{feasible} if a schedule with all $\Ki$-refresh properties exists. Its \emph{density} is
-$\dens(A)=\sum_{i=1}^{\Nc}1/\Ki$.
+A \emph{certificate profile} is a vector of windows,
+\[
+A=(K_1,\dots,K_\Nc)\in\mathbb{N}_{\ge1}^{\Nc},
+\qquad\text{with \emph{density}}\qquad
+\dens(A)=\sum_{i=1}^{\Nc}\frac{1}{\Ki}.
+\]
+It is \emph{feasible} if a schedule with all $\Ki$-refresh properties exists.
 \end{definition}
 
 Feasibility of a certificate profile is precisely the pinwheel scheduling problem
@@ -548,9 +556,12 @@ problem can itself be twice $\lceil\dens\rceil$ (take every $\Ki=2$: the $5/6$ r
 camera per box, while two cameras with $K=2$ share a box perfectly). We therefore take a different
 route and obtain a bound.
 
-\begin{corollary}[fleet dimensioning by harmonic rounding]\label{cor:dimensioning}
-Let $A=(K_1,\dots,K_M)$ be the fleet profile, $\hat K_i=2^{\lfloor\log_2 K_i\rfloor}$ and
-$x_i=1/\hat K_i$. Pack $\{x_i\}$ by first-fit-decreasing into bins of capacity $1$. Then
+\begin{corollary}[fleet dimensioning]\label{cor:dimensioning}
+Let $A=(K_1,\dots,K_M)$ be the fleet profile and set
+\[
+\hat K_i=2^{\lfloor\log_2 K_i\rfloor},\qquad x_i=1/\hat K_i .
+\]
+Pack $\{x_i\}$ by first-fit-decreasing into bins of capacity $1$. Then
 \begin{enumerate}
 \item every bin is schedulable by Algorithm~\ref{alg:admit}, and every original certificate holds,
       because $\hat K_i\le K_i$;
@@ -731,13 +742,14 @@ certificate, against realised density.}
 columns spend the same energy. Shaping trades certified latency for uncertified misses;
 Section~\ref{sec:eval-sensitivity} caps the trade and gives the out-of-sample gain.}
 \label{tab:e2}
+\footnotesize\setlength{\tabcolsep}{5pt}
 \begin{tabular}{lcc}
 \toprule
  & uniform windows & shaped windows \\
 \midrule
 busy fraction (energy) & $\dens^\star$ & $\dens^\star$ (equal by construction) \\
-uncertified miss rate, in sample & baseline & $-\numEtwoGainMinPct$ to $-\numEtwoGainMaxPct$\,\% \\
-uncertified miss rate, out of sample & baseline & $-\numHoldoutGain$\,\% \\
+uncertified miss, in sample & baseline & $-\numEtwoGainMinPct$ to $-\numEtwoGainMaxPct$\,\% \\
+uncertified miss, out of sample & baseline & $-\numHoldoutGain$\,\% \\
 certified events missed & \numEtwoCertMissed & \numEtwoCertMissed \\
 worst certified latency (slots) & \numEtwoLatUnifMax & \numEtwoLatShapedMax \\
 \bottomrule
@@ -823,14 +835,15 @@ admission requests refused.}
 joins per slot). A violation episode is a camera whose window elapsed without service. All four
 policies are non-work-conserving, so the busy fraction column is a fair energy comparison.}
 \label{tab:e5}
+\footnotesize\setlength{\tabcolsep}{5pt}
 \begin{tabular}{lccc}
 \toprule
-policy & violations / 1000 slots & refused (\%) & busy fraction \\
+policy & violations / 1000 slots & refused (\%) & busy \\
 \midrule
 admit-then-EDF & \numEfiveEdfViol & \numEfiveEdfRej & \numEfiveEdfBusy \\
-harmonic density test ($\dens\le1$) & \numEfiveHarmViol & --- & \numEfiveHarmBusy \\
-density test ($\dens\le5/6$, Cor.~\ref{cor:admission}) & \numEfiveDensViol & \numEfiveDensRej & \numEfiveDensBusy \\
-\textbf{Algorithm~\ref{alg:admit} (test + construction)} & \textbf{\numEfiveResViol} & \numEfiveResRej & \numEfiveResBusy \\
+harmonic test, $\dens\le1$ & \numEfiveHarmViol & --- & \numEfiveHarmBusy \\
+density test, $\dens\le5/6$ (Cor.~\ref{cor:admission}) & \numEfiveDensViol & \numEfiveDensRej & \numEfiveDensBusy \\
+\textbf{Alg.~\ref{alg:admit}: test + construction} & \textbf{\numEfiveResViol} & \numEfiveResRej & \numEfiveResBusy \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1182,7 +1195,8 @@ responsibility for the content of the published article.
 \section*{Data availability}
 The simulator, the proof-checking scripts, the result files from which every number in this paper
 is generated, and the scripts that generate the tables, figures and bibliography are available at
-\texttt{\numRepoUrl} (commit \numRepoCommit, tag \numRepoTag), released under an MIT licence. The
+\expandafter\url\expandafter{\numRepoUrl} (commit \numRepoCommit, tag \numRepoTag), released
+under an MIT licence. The
 video corpora are third-party public datasets --- CDnet2014, LASIESTA and BMC --- and are cited
 separately below. The per-event onset and duration annotations derive from the companion work
 declared in Section~\ref{sec:intro}; the repository documents how to regenerate them and does not

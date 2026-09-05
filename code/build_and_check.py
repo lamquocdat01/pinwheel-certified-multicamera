@@ -195,13 +195,25 @@ def main():
                               "ai_declaration_before_references": ai_before_refs,
                               "pass": all(v >= 0 for v in pos.values()) and ai_before_refs}
 
+    # R9 badly overfull boxes: text running off the page silently truncates it in the PDF.
+    # (A long unbreakable URL did exactly that once; the check exists so it cannot recur.)
+    log = os.path.join(LATEX, "main.log")
+    over = []
+    if os.path.exists(log):
+        for l in open(log, encoding="utf-8", errors="replace"):
+            m = re.match(r"Overfull \\hbox \((\d+(?:\.\d+)?)pt too wide\)", l)
+            if m and float(m.group(1)) > 20.0:
+                over.append(l.strip()[:110])
+    results["R9_overfull"] = {"threshold_pt": 20.0, "count": len(over), "examples": over[:5],
+                              "pass": not over}
+
     results["tex_errors"] = errs
 
     out = os.path.join(HERE, "RENDER_CHECK.json")
     json.dump(results, open(out, "w"), indent=1)
 
     GATES = ("R1_placeholders", "R2_identifiers", "R3_corpus_number",
-             "R6_abstract_words", "R7_highlights", "R8_sections")
+             "R6_abstract_words", "R7_highlights", "R8_sections", "R9_overfull")
     ok = all(results[k]["pass"] for k in GATES)
     print("\n== RENDER CHECK on %s" % PDF)
     for k in GATES:
