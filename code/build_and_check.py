@@ -106,7 +106,11 @@ def main():
     errs = [] if "--no-build" in sys.argv else build()
     t = extract()
     flat = re.sub(r"\s+", " ", t)
-    n_pages = t.count("\f") + 1
+    # page count from pdfinfo, not from counting form feeds in the extracted text: pdftotext
+    # emits a trailing form feed, which made the form-feed count one too high.
+    _pi = subprocess.run([tex("pdfinfo"), PDF], capture_output=True)
+    _m = re.search(rb"Pages:\s+(\d+)", _pi.stdout)
+    n_pages = int(_m.group(1)) if _m else t.count("\f")
     results = {}
 
     # R1 placeholders
