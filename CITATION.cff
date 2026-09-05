@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the accompanying paper."
+title: "Pinwheel-certified multi-camera scheduling: simulator, proof checks and manuscript sources"
+abstract: >-
+  Simulator, per-theorem machine checks and manuscript sources for density-based admission
+  control, budget shaping and fleet dimensioning of shared-accelerator edge video analytics.
+authors:
+  - family-names: "Lam Quoc"
+    given-names: "Dat"
+    orcid: "https://orcid.org/0009-0004-5432-9343"
+    affiliation: "FPT School of Business and Technology, FPT University, Ho Chi Minh City, Viet Nam"
+license: MIT
+repository-code: "https://github.com/lamquocdat01/pinwheel-certified-multicamera"
+keywords:
+  - edge video analytics
+  - admission control
+  - shared accelerator
+  - worst-case guarantees
+  - camera fleets
+preferred-citation:
+  type: article
+  title: >-
+    How Many Cameras Can One Edge Box Certify? Density-Based Admission Control, Budget Shaping
+    and Fleet Dimensioning for Shared-Accelerator Video Analytics
+  authors:
+    - family-names: "Lam Quoc"
+      given-names: "Dat"
+      orcid: "https://orcid.org/0009-0004-5432-9343"
+  journal: "Journal of Network and Computer Applications"
+  year: 2026
+  notes: "Under review."

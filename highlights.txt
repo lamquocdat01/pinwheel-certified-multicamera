@@ -1,0 +1,5 @@
+One addition decides how many cameras an edge box can certify: sum 1/K_i <= 5/6
+An O(1) admission test alone is not enough to hold the guarantee under churn
+Pairing the test with a constructive scheduler removes every violation we saw
+Budget shaping cuts missed short events 12% out of sample at unchanged energy
+One shared accelerator saves 1.3-3.1x the energy of one accelerator per camera
