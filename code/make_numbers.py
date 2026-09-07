@@ -241,6 +241,14 @@ if e5:
     emit("numEfiveResRej", pct(g("harmonic_residue_constructive", "rejection_rate")))
     r = g("admit_then_edf", "violations_per_1k_slots") / max(1e-9, g("density_5_6", "violations_per_1k_slots"))
     emit("numEfiveDensFactor", num(r, 0))
+    # What the guarantee costs *relative to admit-then-EDF*: the extra share of requests the
+    # constructive scheduler turns away, in percentage points, and one over that share as a
+    # "one camera in N" reading. Both are derived here so that neither is typed into main.tex,
+    # and so that the text cannot quote the absolute refusal rate as if it were the price.
+    extra = (g("harmonic_residue_constructive", "rejection_rate")
+             - g("admit_then_edf", "rejection_rate"))
+    emit("numEfiveResExtraRejPP", num(100.0 * extra, 1))
+    emit("numEfiveResExtraRejOneIn", num(round(1.0 / max(1e-9, extra))))
     emit("numEfiveResZeroCells",
          num(sum(1 for s in e5["summary"]
                  if s["policy"] == "harmonic_residue_constructive"

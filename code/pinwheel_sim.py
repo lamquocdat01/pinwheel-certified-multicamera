@@ -613,6 +613,9 @@ def make_figs():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    # vector (TrueType) text rather than matplotlib's default Type 3 bitmapped glyphs
+    matplotlib.rcParams["pdf.fonttype"] = 42
+    matplotlib.rcParams["ps.fonttype"] = 42
     # E1
     p = os.path.join(RESULTS, "E1_density_sweep.json")
     if os.path.exists(p):

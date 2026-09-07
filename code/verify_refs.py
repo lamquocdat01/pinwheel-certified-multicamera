@@ -10,7 +10,7 @@ Usage:  python verify_refs.py            # fetch + write refs_verified.json
         python verify_refs.py --report   # render the C5 verification table (markdown)
 """
 from __future__ import annotations
-import json, re, sys, time, urllib.parse, urllib.request, html
+import json, re, sys, time, urllib.error, urllib.parse, urllib.request, html
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -32,7 +32,10 @@ REFS = [
     ("kusano2026sofsem", "Density-Based Heuristics", "10.1007/978-3-032-17801-5_46", None),
     ("fujiwara2026real", "Real Periods", None, "2510.24068"),
     ("kanellopoulos2025kvisits", "k-Visits", None, "2507.11681"),
-    ("kanellopoulos2026finite", "Pinwheel Scheduling Variants", None, "2604.16030"),
+    # published at ICALP 2026 (LIPIcs vol. 374) since the last round; cite the proceedings
+    # version, keeping the arXiv identifier in the note.
+    ("kanellopoulos2026finite", "Pinwheel Scheduling Variants",
+     "10.4230/LIPIcs.ICALP.2026.122", None),
     ("kawamura2025covering", "Pinwheel Covering", None, "2510.06533"),
     ("jacobs2014windows", "windows scheduling", None, "1410.7237"),
     ("gasieniec2024bamboo", "Perpetual maintenance", "10.1016/j.jcss.2023.103476", None),
@@ -50,7 +53,8 @@ REFS = [
     ("cheng2026cpbis", "discovery-latency", "10.1016/j.jnca.2026.104539", None),
     # --- edge video analytics / GPU sharing context -------------------------
     ("zhou2023comst", "Edge", "10.1109/COMST.2023.3323091", None),
-    ("yang2022rtgpu", "RTGPU", None, "2101.10463"),
+    # the arXiv preprint (2101.10463) was published in IEEE TPDS 34(5), 2023; cite the journal
+    ("zou2023rtgpu", "RTGPU", "10.1109/TPDS.2023.3235439", None),
     # --- [dataset] entries for the three public corpora ---------------------
     ("cdnet2014", "CDnet 2014", "10.1109/CVPRW.2014.126", None),
     ("lasiesta2016", "LASIESTA", "10.1016/j.cviu.2016.08.005", None),
@@ -58,10 +62,28 @@ REFS = [
 ]
 
 
+# Crossref answers 429 when called in a tight loop from this machine, which used to look like
+# an unverified reference. Space the calls out and always keep doi.org as a second opinion.
+PAUSE = 2.5
+
+
 def fetch_doi_bibtex(doi):
     u = "https://doi.org/" + urllib.parse.quote(doi)
     req = urllib.request.Request(u, headers={**UA, "Accept": "application/x-bibtex"})
     return urllib.request.urlopen(req, timeout=40).read().decode("utf-8", "replace")
+
+
+def doi_resolves(doi):
+    """Last-resort check: does doi.org resolve this DOI to a publisher page at all?
+    Records where it lands, so a reference is never called verified without evidence."""
+    u = "https://doi.org/" + urllib.parse.quote(doi)
+    req = urllib.request.Request(u, headers=UA, method="HEAD")
+    try:
+        r = urllib.request.urlopen(req, timeout=40)
+        return {"http_status": r.status, "resolved_to": r.url}
+    except urllib.error.HTTPError as e:
+        # some publishers refuse HEAD but the redirect still proves the DOI exists
+        return {"http_status": e.code, "resolved_to": e.url} if e.code < 500 else None
 
 
 def fetch_crossref(doi):
@@ -109,14 +131,20 @@ def main():
                 rec["status"] = "OK"
             except Exception as e:
                 rec["sources"]["crossref"] = "ERR " + str(e)
-            time.sleep(0.4)
+            time.sleep(PAUSE)
             if rec["status"] != "OK":
                 try:
                     rec["sources"]["doi.org"] = fetch_doi_bibtex(doi)
                     rec["status"] = "OK"
                 except Exception as e:
                     rec["sources"]["doi.org"] = "ERR " + str(e)
-                time.sleep(0.4)
+                time.sleep(PAUSE)
+            if rec["status"] != "OK":
+                h = doi_resolves(doi)
+                rec["sources"]["doi.org HEAD"] = h or "ERR did not resolve"
+                if h:
+                    rec["status"] = "OK"
+                time.sleep(PAUSE)
         if aid:
             try:
                 r = fetch_arxiv(aid)

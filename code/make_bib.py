@@ -49,29 +49,73 @@ BOOKTITLE = {
     "dosa2007ffd": "Combinatorics, Algorithms, Probabilistic and Experimental Methodologies (ESCAPE), LNCS 4614",
 }
 NOTE = {
-    "kobayashi2025isaac": "LIPIcs vol. 359, Schloss Dagstuhl",
+    # the proceedings version is cited; the preprint identifier is kept for readers
+    "kanellopoulos2026finite": "Preprint: arXiv:2604.16030",
     # Elsevier asks for data references to be tagged [dataset] in the reference list.
     "cdnet2014": "[dataset]",
     "lasiesta2016": "[dataset]",
     "bmc2012": "[dataset]",
 }
 
+# ---------------------------------------------------------------- capitalisation protection
+# elsarticle-num lowercases every title, so an acronym that is not brace-protected is printed
+# as ordinary prose: "dnn", "iot", "Splitstream", "ffd(i)". Runs of two or more capitals are
+# protected automatically; names whose capitalisation is internal have to be listed.
+PROTECT_WORDS = ["SplitStream", "CDnet", "IoT"]
+
+_ACRONYM = re.compile(r"(?<![A-Za-z])([A-Z]{2,})(?![a-z])")
+_PAREN_CAP = re.compile(r"\(([A-Z])\)")
+
+
+def protect_caps(title):
+    """Brace-protect capitalisation in a BibTeX title. Maths segments are left untouched."""
+    if not title:
+        return title
+    out = []
+    for i, seg in enumerate(re.split(r"(\$[^$]*\$)", title)):
+        if i % 2 == 1:                       # a $...$ segment
+            out.append(seg)
+            continue
+        for w in PROTECT_WORDS:
+            seg = re.sub(r"(?<![{A-Za-z])" + w + r"(?![}A-Za-z])", "{" + w + "}", seg)
+        seg = _ACRONYM.sub(lambda m: "{" + m.group(1) + "}", seg)
+        seg = _PAREN_CAP.sub(lambda m: "({" + m.group(1) + "})", seg)   # e.g. FFD(I), OPT(I)
+        out.append(seg)
+    return "".join(out)
+
 # FORMATTING-ONLY overrides. These change how a verified record is typeset, never what it says.
 # Each one is justified by a field the API returned but placed in the wrong BibTeX slot
 # (e.g. Dagstuhl reports its proceedings title in `journal`), or by an article number that
 # Crossref leaves out. Content is never invented here.
 OVERRIDE = {
+    # Dagstuhl reports its proceedings title in `journal` ("LIPIcs, Volume 359, ISAAC 2025").
+    # Split it into the BibTeX slots the style expects, so that the series and volume are
+    # printed once, by format.bvolume, instead of twice. ISAAC 2025 is the 36th of the series.
     "kobayashi2025isaac": {"_type": "inproceedings",
-                           "booktitle": "33rd International Symposium on Algorithms and "
-                                        "Computation (ISAAC 2025), LIPIcs vol. 359",
+                           "booktitle": "36th International Symposium on Algorithms and "
+                                        "Computation (ISAAC 2025)",
+                           "series": "LIPIcs", "volume": "359",
                            "journal": None, "note": None},
+    # likewise for ICALP 2026 ("LIPIcs, Volume 374, ICALP 2026")
+    "kanellopoulos2026finite": {"_type": "inproceedings",
+                                "booktitle": "International Colloquium on Automata, Languages, "
+                                             "and Programming (ICALP 2026)",
+                                "series": "LIPIcs", "volume": "374",
+                                "journal": None},
+    # Crossref reports only the series name in `container`; the volume and the workshop title
+    # are on the publisher's own DOI landing page.
+    "bmc2012": {"booktitle": "Computer Vision -- ACCV 2012 Workshops",
+                "series": "LNCS", "volume": "7728", "year": "2013"},
+    # Crossref returns bare surnames for this record; the given names are on the article page.
+    "fishburn2002densities": {"author": "Fishburn, Peter C. and Lagarias, Jeffrey C."},
     "fujiwara2026real": {"_type": "article", "year": "2026",
                          "journal": "Discrete Mathematics \\& Theoretical Computer Science",
                          "volume": "28", "number": "4", "howpublished": None},
     "kawamura2026pnas": {"pages": "e2530214123"},
     # Crossref leaves this chapter's year empty; a sibling chapter of the same book
-    # (ISBN 9783540744504, DOI 10.1007/978-3-540-74450-4_43) reports 2007.
-    "dosa2007ffd": {"year": "2007", "volume": "LNCS 4614"},
+    # (ISBN 9783540744504, DOI 10.1007/978-3-540-74450-4_43) reports 2007. The volume is
+    # already named in the booktitle above, so it is not repeated as a `volume` field.
+    "dosa2007ffd": {"year": "2007"},
 }
 
 
@@ -171,6 +215,8 @@ def main():
                 etype = v
             else:
                 f[k] = v
+        if f.get("title"):
+            f["title"] = protect_caps(f["title"])
         f["url"] = "https://doi.org/" + f["doi"]
         body = ",\n".join("  %-12s = {%s}" % (k, v) for k, v in f.items()
                           if v not in (None, "", "None"))

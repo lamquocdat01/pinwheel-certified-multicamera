@@ -304,26 +304,13 @@
  "kanellopoulos2026finite": {
   "key": "kanellopoulos2026finite",
   "expect_fragment": "Pinwheel Scheduling Variants",
-  "doi": null,
-  "arxiv": "2604.16030",
+  "doi": "10.4230/LIPIcs.ICALP.2026.122",
+  "arxiv": null,
   "status": "OK",
   "sources": {
-   "arxiv": {
-    "title": "Hardness, Tractability and Density Thresholds of finite Pinwheel Scheduling Variants",
-    "authors": [
-     "Sotiris Kanellopoulos",
-     "Giorgos Mitropoulos",
-     "Christos Pergaminelis",
-     "Thanos Tolias"
-    ],
-    "published": "2026-04-17T13:00:32Z",
-    "updated": "2026-08-11T20:12:12Z",
-    "doi": null,
-    "journal_ref": null,
-    "id": "http://arxiv.org/abs/2604.16030v5"
-   }
+   "crossref": "ERR HTTP Error 404: Not Found",
+   "doi.org": "@inproceedings{https://doi.org/10.4230/lipics.icalp.2026.122,\n  doi = {10.4230/LIPICS.ICALP.2026.122},\n  url = {https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2026.122},\n  author = {Kanellopoulos, Sotiris and Mitropoulos, Giorgos and Pergaminelis, Christos and Tolias, Thanos},\n  keywords = {Pinwheel Scheduling, Perpetual Scheduling, NP-Completeness, Parameterized Complexity, Theory of computation \u2192 Problems, reductions and completeness},\n  language = {en},\n  title = {Hardness, Tractability and Density Thresholds of Finite Pinwheel Scheduling Variants},\n  journal = {LIPIcs, Volume 374, ICALP 2026},\n  volume = {374},\n  pages = {122:1-122:23},\n  publisher = {Schloss Dagstuhl \u2013 Leibniz-Zentrum f\u00fcr Informatik},\n  year = {2026},\n  copyright = {Creative Commons Attribution 4.0 International license}\n}\n"
   },
-  "datacite_doi": "10.48550/arXiv.2604.16030",
   "title_match": true
  },
  "kawamura2025covering": {
@@ -683,29 +670,31 @@
   },
   "title_match": true
  },
- "yang2022rtgpu": {
-  "key": "yang2022rtgpu",
+ "zou2023rtgpu": {
+  "key": "zou2023rtgpu",
   "expect_fragment": "RTGPU",
-  "doi": null,
-  "arxiv": "2101.10463",
+  "doi": "10.1109/TPDS.2023.3235439",
+  "arxiv": null,
   "status": "OK",
   "sources": {
-   "arxiv": {
-    "title": "RTGPU: Real-Time GPU Scheduling of Hard Deadline Parallel Tasks with Fine-Grain Utilization",
+   "crossref": {
+    "title": "RTGPU: Real-Time GPU Scheduling of Hard Deadline Parallel Tasks With Fine-Grain Utilization",
+    "container": "IEEE Transactions on Parallel and Distributed Systems",
+    "year": 2023,
+    "volume": "34",
+    "issue": "5",
+    "page": "1450-1465",
+    "type": "journal-article",
+    "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
     "authors": [
-     "An Zou",
-     "Jing Li",
-     "Christopher D. Gill",
-     "Xuan Zhang"
+     "Zou, An",
+     "Li, Jing",
+     "Gill, Christopher D.",
+     "Zhang, Xuan"
     ],
-    "published": "2021-01-25T22:34:06Z",
-    "updated": "2023-02-06T11:39:58Z",
-    "doi": null,
-    "journal_ref": null,
-    "id": "http://arxiv.org/abs/2101.10463v3"
+    "alt_id": null
    }
   },
-  "datacite_doi": "10.48550/arXiv.2101.10463",
   "title_match": true
  },
  "cdnet2014": {

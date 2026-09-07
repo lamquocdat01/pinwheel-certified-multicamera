@@ -682,6 +682,11 @@ def make_figs2():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    # Embed text as Type 42 (TrueType) outlines, not the Type 3 bitmapped glyphs matplotlib
+    # writes by default: Type 3 text in a figure makes the whole manuscript PDF report Type 3
+    # fonts, which are not searchable and render blurry when zoomed.
+    matplotlib.rcParams["pdf.fonttype"] = 42
+    matplotlib.rcParams["ps.fonttype"] = 42
     plt.rcParams.update({"font.size": 9, "axes.titlesize": 9, "axes.labelsize": 9,
                          "xtick.labelsize": 8, "ytick.labelsize": 8, "legend.fontsize": 8})
 

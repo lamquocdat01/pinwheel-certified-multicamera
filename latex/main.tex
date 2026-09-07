@@ -10,6 +10,9 @@
 \documentclass[preprint,review,12pt]{elsarticle}
 
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}   % Type 1 outlines for the T1 encoding: without it MiKTeX falls back to
+                       % PK bitmaps, which embed as Type 3 fonts (blurry on screen, not
+                       % searchable, and pdftotext then drops ligatures).
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{bm}
@@ -82,7 +85,8 @@ $\dens=\sum_i 1/\Ki$ is at most $5/6$, and no better rule exists without solving
 instance. This is a Liu--Layland-style design rule for edge video
 analytics: one addition decides admission in $O(1)$ time. Our central finding is that the test
 alone is not enough. Under camera churn it still leaves \numEfiveDensViol\ certificate violations
-per 1000 slots; pairing it with a constructive divisor-wheel scheduler removes them entirely, at
+per 1000 slots; pairing it with the constructive residue-wheel scheduler of Alg.~1 removes them
+entirely, at
 the cost of refusing \numEfiveResRej\,\% of admission requests. We add a convex rule for
 allocating the density budget across cameras with different event-duration laws, a dimensioning
 rule for multi-box deployments, and capacity reductions for model-switch cost and for
@@ -199,7 +203,7 @@ a workload-adaptive split, formulated as an NP-hard optimisation and solved heur
 algorithm evaluated on production traces. Recent work on multi-tenant DNN inference for
 autonomous-vehicle perception \cite{liu2026multitenant} shares one GPU among several perception
 streams and reduces fusion delay and its variability. Real-time GPU scheduling for DNN workloads
-\cite{yang2022rtgpu} provides response-time analysis for parallel tasks with hard deadlines.
+\cite{zou2023rtgpu} provides response-time analysis for parallel tasks with hard deadlines.
 
 All of these optimise an \emph{average} objective or analyse \emph{job deadlines}. None of them
 answers ``how many cameras fit'' with a closed-form test, and none carries a per-camera
@@ -252,7 +256,7 @@ Work & Unit scheduled & Guarantee & Capacity law & $O(1)$ test \\
 SplitStream \cite{liang2024splitstream} & camera $\to$ node & avg.\ accuracy & no & no \\
 Multi-tenant DNN \cite{liu2026multitenant} & inference request & predictability & no & no \\
 Attention sched.\ \cite{liu2023attention} & region in a frame & mean uncertainty & no & no \\
-RT GPU sched.\ \cite{yang2022rtgpu} & periodic job & job deadline & utilisation & no \\
+RT GPU sched.\ \cite{zou2023rtgpu} & periodic job & job deadline & utilisation & no \\
 BLE mesh admission \cite{leonardi2025racble} & connection & non-overlap & no & yes \\
 \textbf{This paper} & \textbf{camera in a fleet} & \textbf{refresh window} & $\bm{\dens\le5/6}$ & \textbf{yes} \\
 \bottomrule
@@ -697,7 +701,7 @@ and is not the refusal rate an operator would see on a natural fleet distributio
 bound on the price of instantaneous admission.
 
 \subsection{The energy--miss frontier and budget shaping}\label{sec:eval-frontier}
-Figure~\ref{fig:e2} replays the corpus at four density budgets. Two results
+Figure~\ref{fig:e2} replays the corpus at four density budgets. Three results
 (Table~\ref{tab:e2}). The constructive scheduler missed \numEtwoCertMissed\ of
 \numEtwoCertTotal\ certified events across the whole experiment, and the certified latency bound
 $\Ki-1$ held everywhere; lazy EDF, on the same profiles, missed \numEtwoEdfCertMissed\ of
@@ -858,8 +862,12 @@ with the constructive residue wheel reaches zero violations, and it does so at e
 The price is honest and visible in the right panel: Algorithm~\ref{alg:admit} refuses
 \numEfiveResRej\,\% of requests at the highest churn level against \numEfiveEdfRej\,\% for
 admit-then-EDF. Part of that gap is the power-of-two rounding and part is fragmentation of the
-residue wheel after departures, which is a buddy-allocation effect. An operator buys a hard
-guarantee with roughly one refused camera in thirteen.
+residue wheel after departures, which is a buddy-allocation effect. What the guarantee costs is
+that \emph{gap}, not the refusal rate itself: \numEfiveResExtraRejPP\ percentage points more
+requests turned away than admit-then-EDF, that is, roughly one camera in
+\numEfiveResExtraRejOneIn\ refused that admit-then-EDF would have taken. The absolute refusal
+rate at this churn level is \numEfiveResRej\,\%, and most of it is demand the box could not have
+carried under either policy.
 
 \subsection{Energy in millijoules and the consolidation gain}\label{sec:eval-energy}
 We attach the two energy constants measured on a Jetson Orin Nano in the companion work,

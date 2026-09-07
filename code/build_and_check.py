@@ -94,6 +94,33 @@ def build():
     return errs
 
 
+def font_check(pdfs):
+    """No PDF in the list may embed a Type 3 (bitmap) font, and every font must be embedded.
+    Shared with verify_package.py, which runs it over the whole submission package."""
+    bad, unembedded, per_file = [], [], {}
+    for p in pdfs:
+        if not os.path.exists(p):
+            continue
+        r = subprocess.run([tex("pdffonts"), p], capture_output=True)
+        rows = r.stdout.decode("utf-8", "replace").splitlines()[2:]
+        names = set()
+        for row in rows:
+            if not row.strip():
+                continue
+            cols = row.split()
+            # name is column 0; the type is everything up to the encoding column
+            if "Type 3" in row:
+                bad.append((os.path.basename(p), cols[0]))
+            # columns are: name type... encoding emb sub uni objectnum gen
+            if len(cols) >= 6 and cols[-5] == "no":       # "emb" column
+                unembedded.append((os.path.basename(p), cols[0]))
+            names.add(cols[0])
+        per_file[os.path.basename(p)] = len(names)
+    return {"pdfs_checked": per_file, "type3": sorted(set(bad)),
+            "not_embedded": sorted(set(unembedded)),
+            "pass": not bad and not unembedded}
+
+
 def extract():
     r = subprocess.run([tex("pdftotext"), "-raw", "main.pdf", "main.txt"], cwd=LATEX,
                        capture_output=True)
@@ -211,13 +238,21 @@ def main():
     results["R9_overfull"] = {"threshold_pt": 20.0, "count": len(over), "examples": over[:5],
                               "pass": not over}
 
+    # R10 no Type 3 fonts. A Type 3 font is a bitmap: it renders blurry at any zoom, cannot be
+    # searched or copied, and makes pdftotext drop ligatures (which once inflated the abstract
+    # word count from 240 to 292). MiKTeX falls back to Type 3 whenever the T1 outlines are
+    # missing (fixed by \usepackage{lmodern}) and matplotlib emits Type 3 unless
+    # rcParams["pdf.fonttype"] is 42.
+    results["R10_no_type3_fonts"] = font_check([PDF])
+
     results["tex_errors"] = errs
 
     out = os.path.join(HERE, "RENDER_CHECK.json")
     json.dump(results, open(out, "w"), indent=1)
 
     GATES = ("R1_placeholders", "R2_identifiers", "R3_corpus_number",
-             "R6_abstract_words", "R7_highlights", "R8_sections", "R9_overfull")
+             "R6_abstract_words", "R7_highlights", "R8_sections", "R9_overfull",
+             "R10_no_type3_fonts")
     ok = all(results[k]["pass"] for k in GATES)
     print("\n== RENDER CHECK on %s" % PDF)
     for k in GATES:
